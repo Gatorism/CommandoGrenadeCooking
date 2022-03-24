@@ -1,0 +1,81 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Commando_Grenade_Cooking</RootNamespace>
+  </PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="BepInEx.Analyzers" Version="1.0.*">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="BepInEx.Core" Version="5.4.19" />
+		<PackageReference Include="RiskOfRain2.GameLibs" Version="1.2.1-r.1" />
+		<PackageReference Include="UnityEngine.Modules" Version="2019.4.26" />
+	</ItemGroup>
+ <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>libs\BepInEx\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="0Harmony20">
+      <HintPath>libs\BepInEx\0Harmony20.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>libs\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx">
+      <HintPath>libs\BepInEx\BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx.Harmony">
+      <HintPath>libs\BepInEx\BepInEx.Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx.Preloader">
+      <HintPath>libs\BepInEx\BepInEx.Preloader.dll</HintPath>
+    </Reference>
+    <Reference Include="com.unity.multiplayer-hlapi.Runtime">
+      <HintPath>libs\com.unity.multiplayer-hlapi.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="Facepunch.Steamworks">
+      <HintPath>libs\Facepunch.Steamworks.dll</HintPath>
+    </Reference>
+    <Reference Include="HarmonyXInterop">
+      <HintPath>libs\BepInEx\HarmonyXInterop.dll</HintPath>
+    </Reference>
+    <Reference Include="HGCSharpUtils">
+      <HintPath>libs\HGCSharpUtils.dll</HintPath>
+    </Reference>
+    <Reference Include="HGUnityUtils">
+      <HintPath>libs\HGUnityUtils.dll</HintPath>
+    </Reference>
+    <Reference Include="KinematicCharacterController">
+      <HintPath>libs\KinematicCharacterController.dll</HintPath>
+    </Reference>
+    <Reference Include="LegacyResourcesAPI">
+      <HintPath>libs\LegacyResourcesAPI.dll</HintPath>
+    </Reference>
+    <Reference Include="MMHOOK_RoR2">
+      <HintPath>libs\BepInEx\MMHOOK_RoR2.dll</HintPath>
+    </Reference>
+    <Reference Include="ModLoader">
+      <HintPath>libs\ModLoader.dll</HintPath>
+    </Reference>
+    <Reference Include="R2API">
+      <HintPath>libs\R2API\R2API.dll</HintPath>
+    </Reference>
+    <Reference Include="Rewired_CSharp">
+      <HintPath>libs\Rewired_CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="RiskyMod">
+      <HintPath>libs\SoftDependencies\RiskyMod.dll</HintPath>
+    </Reference>
+    <Reference Include="RoR2BepInExPack">
+      <HintPath>libs\BepInEx\RoR2BepInExPack.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Folder Include="States\" />
+  </ItemGroup>
+
+</Project>
