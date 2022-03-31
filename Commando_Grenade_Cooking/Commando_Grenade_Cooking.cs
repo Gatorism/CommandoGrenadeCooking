@@ -19,7 +19,7 @@ using System;
 namespace Commando_Grenade_Cooking
 {
     [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.Gatorism.Commando_Grenade_Cooking", "Commando Grenade Cooking", "1.0.0")]
+    [BepInPlugin("com.Gatorism.Commando_Grenade_Cooking", "Commando Grenade Cooking", "1.1.0")]
     [R2API.Utils.R2APISubmoduleDependency(nameof(LanguageAPI), nameof(PrefabAPI), nameof(DamageAPI))]
     [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.EveryoneNeedSameModVersion)]
     //Ian is Cute
