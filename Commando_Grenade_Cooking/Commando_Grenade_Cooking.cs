@@ -11,6 +11,7 @@ using RoR2.Projectile;
 using RoR2.Skills;
 using UnityEngine;
 using System.Security.Permissions;
+using System;
 
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
@@ -22,19 +23,17 @@ namespace Commando_Grenade_Cooking
     [BepInIncompatibility("com.RiskyLives.RiskyMod")]
     [R2API.Utils.R2APISubmoduleDependency(nameof(LanguageAPI), nameof(PrefabAPI), nameof(DamageAPI))]
     [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.EveryoneNeedSameModVersion)]
-    //Coded almost entirely by Moffein. Please credit him for this, I just wanted this mod by itself.
-    //Started with fixing mod myself, then swapped to newer code in his RiskyMod mod. 
-    //Compatibility code based off of ZetTweaks. Check them out!
     //Ian is Cute
     public class Commando_Grenade_Cooking : BaseUnityPlugin
     {
-        public static GameObject CommandoObject = LegacyResourcesAPI.Load<GameObject>("Prefabs/CharacterBodies/CommandoBody");
         internal new static ManualLogSource Logger { get; set; }
-        float selfDamage = 40f;
-        float damageCoefficient = 1200f;
-        bool enableFalloff = false;
-        float grenadeCooldown = 10f;
-        int baseMaxStock = 1;
+
+        public static float selfDamage = 40f;
+        public static float damageCoefficient = 1200f;
+        public static bool enableFalloff = false;
+        public static float grenadeCooldown = 10f;
+        public static int baseMaxStock = 1;
+        public static GameObject commandoBody = LegacyResourcesAPI.Load<GameObject>("Prefabs/CharacterBodies/CommandoBody");
         public void Awake()
         {
             selfDamage = base.Config.Bind<float>(new ConfigDefinition("General", "Self Damage Percent"), 40f, new ConfigDescription("Percent of current health to lose when overcooking.")).Value;
@@ -42,52 +41,75 @@ namespace Commando_Grenade_Cooking
             enableFalloff = base.Config.Bind<bool>(new ConfigDefinition("General", "Enable Sweetspot Falloff"), false, new ConfigDescription("Enable grenade sweet spot falloff (Vanilla is true).")).Value;
             grenadeCooldown = base.Config.Bind<float>(new ConfigDefinition("General", "Cooldown"), 10f, new ConfigDescription("Cooldown, in seconds")).Value;
             baseMaxStock = base.Config.Bind<int>(new ConfigDefinition("General", "Base Stock"), 1, new ConfigDescription("Cooldown, in seconds")).Value;
+            Commando_Grenade_Cooking.instance = this;
+            Utils.InitConfig(base.Config);
 
             Logger = base.Logger;
             CookGrenade.selfHPDamagePercent = selfDamage / 50;
             ThrowGrenade._damageCoefficient = damageCoefficient / 100;
-                Logger.LogMessage("Frag Grenade Cooking enabled");
-                ModifyGrenade(CommandoObject.GetComponent<SkillLocator>());
-                ContentCore.Init();
+            this.CreateGrenade();
+            this.AddNewGrenadeSkill();
+            Logger.LogMessage("Frag Grenade Cooking enabled");
+            ContentCore.Init();
 
         }
 
-        private void ModifyGrenade(SkillLocator sk)
+        private void CreateGrenade()
         {
-
-            LanguageAPI.Add("MFGC_COMMANDO_SPECIAL_ALT1_DESC", "Throw a grenade that explodes for <style=cIsDamage>" + (ThrowGrenade._damageCoefficient).ToString("P0").Replace(" ", "").Replace(",", "") + " damage</style> after 3 seconds. Can be <style=cIsDamage>cooked</style> to explode early. Deals <style=cIsDamage>" + (CookGrenade.selfHPDamagePercent / 2).ToString("P0").Replace(" ", "").Replace(",", "") + " damage</style> to current HP if not thrown.");
-
+            GameObject GrenadeObject = PrefabAPI.InstantiateClone(LegacyResourcesAPI.Load<GameObject>("prefabs/projectiles/CommandoGrenadeProjectile"), "CookableGrenade", true);
             ThrowGrenade._projectilePrefab = BuildGrenadeProjectile();
             CookGrenade.overcookExplosionEffectPrefab = BuildGrenadeOvercookExplosionEffect();
+            ContentAddition.AddProjectile(GrenadeObject);
+        }
 
+        public void AddNewGrenadeSkill()
+        {
+            SkillLocator component = commandoBody.GetComponent<SkillLocator>();
+            SkillFamily skillFamily = component.special.skillFamily;
+            SteppedSkillDef steppedSkillDef = spoofGrenadeSkillDef(skillFamily.variants[0].skillDef as SteppedSkillDef);
+            
+            ContentAddition.AddSkillDef(steppedSkillDef);
             Content.entityStates.Add(typeof(CookGrenade));
             Content.entityStates.Add(typeof(ThrowGrenade));
+            Array.Resize<SkillFamily.Variant>(ref skillFamily.variants, skillFamily.variants.Length + 1);
+            SkillFamily.Variant[] variants = skillFamily.variants;
+            int num = skillFamily.variants.Length - 1;
+            SkillFamily.Variant variant = default(SkillFamily.Variant);
+            variant.skillDef = steppedSkillDef;
+            variant.unlockableDef = null;
+            variant.viewableNode = new ViewablesCatalog.Node(steppedSkillDef.skillNameToken, false, null);
+            variants[num] = variant;
 
-            SkillDef grenadeDef = SkillDef.CreateInstance<SkillDef>();
-            grenadeDef.activationState = new SerializableEntityStateType(typeof(CookGrenade));
-            grenadeDef.activationStateMachineName = "Weapon";
-            grenadeDef.baseMaxStock = baseMaxStock;
-            grenadeDef.baseRechargeInterval = grenadeCooldown;
-            grenadeDef.beginSkillCooldownOnSkillEnd = false;
-            grenadeDef.canceledFromSprinting = false;
-            grenadeDef.dontAllowPastMaxStocks = true;
-            grenadeDef.forceSprintDuringState = false;
-            grenadeDef.fullRestockOnAssign = true;
-            grenadeDef.icon = sk.special.skillFamily.variants[1].skillDef.icon;
-            grenadeDef.interruptPriority = InterruptPriority.PrioritySkill;
-            grenadeDef.isCombatSkill = true;
-            grenadeDef.keywordTokens = new string[] { };
-            grenadeDef.mustKeyPress = false;
-            grenadeDef.cancelSprintingOnActivation = true;
-            grenadeDef.rechargeStock = 1;
-            grenadeDef.requiredStock = 1;
-            grenadeDef.skillName = "Grenade";
-            grenadeDef.skillNameToken = "COMMANDO_SPECIAL_ALT1_NAME";
-            grenadeDef.skillDescriptionToken = "MFGC_COMMANDO_SPECIAL_ALT1_DESC";
-            grenadeDef.stockToConsume = 1;
-            Content.skillDefs.Add(grenadeDef);
-            sk.special.skillFamily.variants[1].skillDef = grenadeDef;
-            Skills.Grenade = grenadeDef;
+        }
+
+        private static SteppedSkillDef spoofGrenadeSkillDef(SteppedSkillDef grenadeDef)
+        {
+           
+            LanguageAPI.Add("GC_COOKABLEGRENADE_NAME", "Cookable Grenade");
+            LanguageAPI.Add("GC_COMMANDO_SPECIAL_ALT1_DESC", "Throw a grenade that explodes for <style=cIsDamage>" + (ThrowGrenade._damageCoefficient).ToString("P0").Replace(" ", "").Replace(",", "") + " damage</style> after 3 seconds. Can be <style=cIsDamage>cooked</style> to explode sooner after being thrown. Deals <style=cIsDamage>" + (CookGrenade.selfHPDamagePercent / 2).ToString("P0").Replace(" ", "").Replace(",", "") + " damage</style> to current HP if not thrown.");
+            SkillLocator iconcomponent = commandoBody.GetComponent<SkillLocator>();
+            SteppedSkillDef steppedSkillDef = ScriptableObject.CreateInstance<SteppedSkillDef>();
+            steppedSkillDef.activationState = new SerializableEntityStateType(typeof(CookGrenade));
+            steppedSkillDef.activationStateMachineName = "Weapon";
+            steppedSkillDef.baseMaxStock = baseMaxStock;
+            steppedSkillDef.baseRechargeInterval = grenadeCooldown;
+            steppedSkillDef.beginSkillCooldownOnSkillEnd = false;
+            steppedSkillDef.canceledFromSprinting = false;
+            steppedSkillDef.dontAllowPastMaxStocks = true;
+            steppedSkillDef.forceSprintDuringState = false;
+            steppedSkillDef.icon = iconcomponent.special.skillFamily.variants[1].skillDef.icon;
+            steppedSkillDef.interruptPriority = InterruptPriority.PrioritySkill;
+            steppedSkillDef.isCombatSkill = true;
+            steppedSkillDef.keywordTokens = new string[] { };
+            steppedSkillDef.mustKeyPress = false;
+            steppedSkillDef.cancelSprintingOnActivation = true;
+            steppedSkillDef.rechargeStock = 1;
+            steppedSkillDef.requiredStock = 1;
+            steppedSkillDef.skillName = "GC_COOKABLEGRENADE_NAME";
+            steppedSkillDef.skillNameToken = "GC_COOKABLEGRENADE_NAME";
+            steppedSkillDef.skillDescriptionToken = "GC_COMMANDO_SPECIAL_ALT1_DESC";
+            steppedSkillDef.stockToConsume = 1;
+            return steppedSkillDef;
         }
         private GameObject BuildGrenadeProjectile()
         {
@@ -120,8 +142,9 @@ namespace Commando_Grenade_Cooking
             Content.effectDefs.Add(new EffectDef(effect));
             return effect;
         }
-
+        public static Commando_Grenade_Cooking instance;
     }
+    
     public class Skills
     {
         public static SkillDef Grenade;
